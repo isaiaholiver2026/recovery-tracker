@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Knee Recovery Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+        </div>
+        <div>
+          <h1>Knee Recovery</h1>
+          <p id="headerSub" class="muted">Set your surgery date to begin</p>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="Sections">
+        <button data-view="today" class="active">Log</button>
+        <button data-view="progress">Progress</button>
+        <button data-view="milestones">Milestones</button>
+        <button data-view="history">History</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ LOG ============ -->
+    <section id="view-today" class="view active">
+      <form id="onboarding" class="card onboarding" hidden>
+        <h2>Welcome. Let's set up your recovery</h2>
+        <p class="muted">Your surgery date anchors everything else: post-op day counts, recovery phases, and milestone timing. You can change any of this later in Settings.</p>
+        <div class="grid-3">
+          <label class="field"><span>Surgery date</span><input type="date" id="obDate" required></label>
+          <label class="field"><span>Which knee</span>
+            <select id="obKnee"><option>Right</option><option>Left</option></select>
+          </label>
+          <label class="field"><span>Procedure</span>
+            <select id="obProcedure"></select>
+          </label>
+        </div>
+        <div class="actions"><button type="submit" class="primary">Start tracking</button></div>
+      </form>
+
+      <div id="phaseCard" class="card phase"></div>
+
+      <form id="logForm" class="card">
+        <div class="form-head">
+          <div>
+            <h2>Daily check-in</h2>
+            <p id="logDateInfo" class="muted"></p>
+          </div>
+          <div class="date-nav">
+            <button type="button" class="icon-btn" id="prevDay" aria-label="Previous day">‹</button>
+            <input type="date" id="logDate" aria-label="Entry date">
+            <button type="button" class="icon-btn" id="nextDay" aria-label="Next day">›</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span>Everyday pain <small class="muted">0 = none, 10 = worst imaginable</small></span>
+          <div class="scale" data-field="pain" data-min="0" data-max="10"></div>
+        </div>
+        <div class="field">
+          <span>Pain during exercise / PT <small class="muted">your worst point during the session</small></span>
+          <div class="scale" data-field="exPain" data-min="0" data-max="10"></div>
+        </div>
+        <div class="field">
+          <span>Swelling <small class="muted">0 = none, 10 = severe</small></span>
+          <div class="scale" data-field="swelling" data-min="0" data-max="10"></div>
+        </div>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Knee bend: flexion (°)</span>
+            <input type="number" id="flexion" min="0" max="170" inputmode="numeric" placeholder="e.g. 85">
+            <small class="muted">How far the knee bends. Normal is about 135–150°.</small>
+          </label>
+          <label class="field">
+            <span>Knee straightening: extension (°)</span>
+            <input type="number" id="extension" min="-20" max="60" inputmode="numeric" placeholder="0 = fully straight">
+            <small class="muted">Degrees short of straight. 0 is the goal; negative means hyperextension.</small>
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Exercises <small class="muted" id="exCount"></small></span>
+          <div id="workoutList" class="workout"></div>
+          <div class="add-ex">
+            <div class="add-ex-head">
+              <small class="muted" id="exHint">Tap to add. Sets and reps fill in from last time.</small>
+              <span>
+                <button type="button" class="link-btn" id="repeatLast" hidden></button>
+                <button type="button" class="link-btn" id="editChips">Edit list</button>
+              </span>
+            </div>
+            <div id="exChips" class="chips"></div>
+            <div class="add-other">
+              <input id="otherEx" placeholder="Something new? Type the exercise name" autocomplete="off">
+              <button type="button" class="secondary" id="addOtherEx">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="more">
+          <summary>More details <small class="muted">walking, brace, sleep, mood…</small></summary>
+          <div class="grid-2">
+            <label class="field"><span>Walking</span>
+              <select id="walking">
+                <option value="">–</option>
+                <option>Non-weight bearing</option>
+                <option>Two crutches</option>
+                <option>One crutch / cane</option>
+                <option>Independent with limp</option>
+                <option>Independent, normal gait</option>
+              </select>
+            </label>
+            <label class="field"><span>Brace</span>
+              <select id="brace">
+                <option value="">–</option>
+                <option>Locked straight</option>
+                <option>Unlocked</option>
+                <option>Off</option>
+              </select>
+            </label>
+            <label class="field"><span>Sleep</span>
+              <input type="text" id="sleep" placeholder="8:30 or 8.5" autocomplete="off">
+            </label>
+            <label class="field"><span>Ice / compression sessions</span><input type="number" id="icing" min="0" max="20" inputmode="numeric"></label>
+            <label class="field"><span id="stepsLabel">Yesterday's steps</span><input type="number" id="steps" min="0" max="100000" inputmode="numeric"></label>
+            <div class="field">
+              <span>Mood</span>
+              <div class="scale" data-field="mood" data-min="1" data-max="5" data-labels="Rough,Low,Okay,Good,Great"></div>
+            </div>
+          </div>
+          <div class="toggles">
+            <label class="check-inline"><input type="checkbox" id="pt"> PT session today</label>
+            <label class="check-inline"><input type="checkbox" id="meds"> Took pain medication</label>
+          </div>
+        </details>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="notes" rows="3" placeholder="How did it feel? Anything your PT said? New exercises?"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="primary">Save entry</button>
+          <span id="saveStatus" class="muted"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ PROGRESS ============ -->
+    <section id="view-progress" class="view">
+      <div class="row-between">
+        <h2>Your progress</h2>
+        <div class="segmented" id="rangePicker">
+          <button data-range="14">2 wk</button>
+          <button data-range="30">30 d</button>
+          <button data-range="90">90 d</button>
+          <button data-range="all" class="active">All</button>
+        </div>
+      </div>
+      <div id="stats" class="stats"></div>
+      <div class="chart-grid">
+        <div class="card chart-card wide">
+          <div class="chart-head"><h3>Knee bend (flexion)</h3><span class="legend"><i class="sw c1"></i>Flexion <i class="sw marker"></i>Milestone</span></div>
+          <div id="chartFlexion"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head"><h3>Extension: degrees short of straight</h3></div>
+          <div id="chartExtension"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head"><h3>Pain &amp; swelling</h3><span class="legend"><i class="sw c3"></i>Everyday pain <i class="sw c4"></i>Exercise/PT pain <i class="sw c2"></i>Swelling</span></div>
+          <div id="chartSymptoms"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head"><h3>Exercise days per week</h3></div>
+          <div id="chartAdherence"></div>
+        </div>
+        <div class="card chart-card wide">
+          <div class="chart-head"><h3>How exercises have felt</h3><span class="legend"><i class="sw e-easy"></i>Easy <i class="sw e-moderate"></i>Moderate <i class="sw e-hard"></i>Hard</span></div>
+          <div id="effortList"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head"><h3>Sleep (hours)</h3></div>
+          <div id="chartSleep"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MILESTONES ============ -->
+    <section id="view-milestones" class="view">
+      <div class="row-between">
+        <h2>Milestones</h2>
+        <span id="msSummary" class="muted"></span>
+      </div>
+      <p class="muted disclaimer">Typical windows are general guides. Timelines vary a lot by graft, meniscus repair vs. trim, and your surgeon's protocol. A meniscus repair often means slower weight-bearing and limits on bend early on. Follow your surgeon and PT.</p>
+      <div id="milestoneList" class="milestones"></div>
+      <form id="customMsForm" class="card inline-form">
+        <h3>Add your own milestone</h3>
+        <div class="grid-3">
+          <label class="field"><span>Milestone</span><input id="cmName" required placeholder="e.g. Drove a car again"></label>
+          <label class="field"><span>Target week (optional)</span><input id="cmWeek" type="number" min="0" max="104" inputmode="numeric"></label>
+          <div class="field end"><button type="submit" class="secondary">Add milestone</button></div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section id="view-history" class="view">
+      <div class="row-between">
+        <h2>History</h2>
+        <span id="historyCount" class="muted"></span>
+      </div>
+      <div id="historyList"></div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="view-settings" class="view">
+      <form id="profileForm" class="card">
+        <h2>Surgery &amp; recovery details</h2>
+        <div class="grid-3">
+          <label class="field"><span>Surgery date</span><input type="date" id="pDate"></label>
+          <label class="field"><span>Which knee</span><select id="pKnee"><option>Right</option><option>Left</option></select></label>
+          <label class="field"><span>Procedure</span><select id="pProcedure"></select></label>
+          <label class="field"><span>Graft type</span>
+            <select id="pGraft">
+              <option value="">Not sure</option>
+              <option>Patellar tendon (BTB)</option>
+              <option>Hamstring tendon</option>
+              <option>Quadriceps tendon</option>
+              <option>Allograft (donor)</option>
+            </select>
+          </label>
+          <label class="field"><span>Surgeon</span><input id="pSurgeon"></label>
+          <label class="field"><span>Physical therapist</span><input id="pPT"></label>
+        </div>
+        <label class="field"><span>My goal</span><input id="pGoal" placeholder="e.g. Back to pickup basketball by next summer"></label>
+        <div class="actions"><button type="submit" class="primary">Save details</button><span id="profileStatus" class="muted"></span></div>
+      </form>
+
+      <div class="card">
+        <h2>Exercise library</h2>
+        <p class="muted">These are the quick-add buttons in your daily log. The sets and reps here are only the first-time defaults; after that, each exercise fills in from the last time you did it. New exercises you type in the log are added here automatically.</p>
+        <div class="ex-row ex-head" aria-hidden="true"><span>Exercise</span><span>Sets</span><span>Reps</span><span>Hold / weight / time</span><span></span></div>
+        <div id="exerciseEditor" class="ex-editor"></div>
+        <form id="addExForm" class="ex-row">
+          <input id="newExName" placeholder="New exercise" required>
+          <input id="newExSets" type="number" min="0" max="99" inputmode="numeric" placeholder="Sets">
+          <input id="newExReps" type="number" min="0" max="999" inputmode="numeric" placeholder="Reps">
+          <input id="newExExtra" placeholder="e.g. 5 s hold, 10 lb">
+          <button type="submit" class="secondary">Add</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Your data</h2>
+        <p class="muted">Everything is stored only in this browser on this computer. Export a backup now and then, and use CSV to share your log with your PT.</p>
+        <div class="button-row">
+          <button type="button" class="secondary" id="exportJson">Export backup (.json)</button>
+          <button type="button" class="secondary" id="importJsonBtn">Import backup</button>
+          <input type="file" id="importJson" accept="application/json,.json" hidden>
+          <button type="button" class="secondary" id="exportCsv">Export log (.csv)</button>
+          <button type="button" class="danger" id="eraseAll">Erase all data</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="muted">Your log stays on this device. This app isn't medical advice; follow your surgeon's and physical therapist's protocol.</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
